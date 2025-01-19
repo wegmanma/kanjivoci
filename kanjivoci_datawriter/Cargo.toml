@@ -1,0 +1,8 @@
+[package]
+name = "kanjivoci_datawriter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+toml = "0.8.19"
+kanjivoci_lib = {path = "../kanjivoci_lib/"}
