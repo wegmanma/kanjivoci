@@ -29,12 +29,17 @@ name = "kanjivoci_datawriter"
 version = "0.1.0"
 dependencies = [
  "kanjivoci_lib",
+ "serde",
  "toml",
 ]
 
 [[package]]
 name = "kanjivoci_lib"
 version = "0.1.0"
+dependencies = [
+ "serde",
+ "toml",
+]
 
 [[package]]
 name = "memchr"

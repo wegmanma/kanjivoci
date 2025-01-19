@@ -1,10 +1,16 @@
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::Read;
+use std::io::Write;
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Kanjicard {
     pub kanji: String,
     pub on_reading: Vec<String>,
     pub kun_reading: Vec<String>,
     pub meaning: String,
-    pub level: i8, // N5 -> 5 till N1 -> 1. If 0: Not set yet
+    pub level: i8,  // N5 -> 5 till N1 -> 1. If 0: Not set yet
     pub score: f32, // the higher, the better known
 }
 
@@ -44,7 +50,7 @@ impl std::fmt::Display for Kanjicard {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Vocabcard {
     pub kanji: String,
     pub spelling: Vec<String>,
@@ -80,7 +86,7 @@ impl std::fmt::Display for Vocabcard {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Carddecks {
     kanjicards: Vec<Kanjicard>,
     vocabcards: Vec<Vocabcard>,
@@ -93,6 +99,7 @@ impl Carddecks {
             vocabcards: Vec::new(),
         }
     }
+
     pub fn add_kanjicard(
         &mut self,
         kanji: &str,
@@ -101,11 +108,16 @@ impl Carddecks {
         level: i8,
         meaning: &str,
     ) {
-        self.kanjicards
-            .push(Kanjicard::new(kanji, on_reading, kun_reading, level, meaning));
+        self.kanjicards.push(Kanjicard::new(
+            kanji,
+            on_reading,
+            kun_reading,
+            level,
+            meaning,
+        ));
     }
 
-    pub fn add_vocabcard(&mut self, kanji: &str, spelling: &Vec<String> , meaning: &str) {
+    pub fn add_vocabcard(&mut self, kanji: &str, spelling: &Vec<String>, meaning: &str) {
         self.vocabcards
             .push(Vocabcard::new(kanji, spelling, meaning));
     }
@@ -137,7 +149,7 @@ impl Carddecks {
         }
     }
 
-    pub fn print_decks(self) {
+    pub fn print_decks(&self) {
         println!("kanjivocis");
         for card in self.kanjicards.iter() {
             println!("{}", card);
@@ -146,5 +158,45 @@ impl Carddecks {
         for card in self.vocabcards.iter() {
             println!("{}", card);
         }
+    }
+
+    pub fn write_vocab_toml_bak(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        println!("Vocabcard getting written?");
+        println!("Vocabcards");
+        let mut file = File::create(path)?;
+        let toml_header = "[[Vocabcard]]\n";
+        for card in self.vocabcards.iter() {
+            let mut toml_string = toml::to_string(card)?;
+            toml_string.insert_str(0, toml_header);
+            println!("{}", toml_string);
+            file.write_all(toml_string.as_bytes())?;
+        }
+        Ok(())
+    }
+
+    pub fn write_vocab_toml(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        println!("Vocabcard getting written?");
+        println!("Vocabcards");
+        let mut file = File::create(path)?;
+        let vocab_vec = self.vocabcards.clone();
+        let vocab_map: HashMap<String, Vocabcard> = vocab_vec
+            .into_iter()
+            .map(|card| (card.kanji.clone(), card))
+            .collect();
+        let toml_string = toml::to_string(&vocab_map)?;
+        println!("{}", toml_string);
+        file.write_all(toml_string.as_bytes())?;
+        Ok(())
+    }
+
+    pub fn read_vocab_toml(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let mut file = File::open(path)?;
+        let mut toml_string = String::new();
+        file.read_to_string(&mut toml_string)?;
+        let vocab_map: HashMap<String, Vocabcard> = toml::de::from_str(&toml_string)?;
+        println!("{:?}", vocab_map);
+        let mut vocab_vec: Vec<Vocabcard> = vocab_map.values().cloned().collect();
+        self.vocabcards.append(&mut vocab_vec);
+        Ok(())
     }
 }

@@ -1,5 +1,6 @@
 use kanjivoci_lib;
-fn main() {
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut carddeck = kanjivoci_lib::Carddecks::new();
 
     let mut on_readings = Vec::new();
@@ -28,4 +29,11 @@ fn main() {
     carddeck.kanji_kanji_align_score("人", 1.2);
     carddeck.sort_decks();
     carddeck.print_decks();
+
+    carddeck.write_vocab_toml("vocab.toml")?;
+
+    carddeck.read_vocab_toml("vocab.toml")?;
+
+    carddeck.print_decks();
+    Ok(())
 }

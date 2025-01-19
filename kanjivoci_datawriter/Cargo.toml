@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 toml = "0.8.19"
+serde = {version = "1.0.217", features = ["derive"]}
 kanjivoci_lib = {path = "../kanjivoci_lib/"}
