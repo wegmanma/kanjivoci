@@ -137,6 +137,19 @@ impl Carddecks {
         })
     }
 
+    pub fn vocab_find_duplicate(&mut self, kanji: &str) -> bool {
+        if self
+            .vocabcards
+            .iter_mut()
+            .find(|x| x.kanji == kanji)
+            .is_some()
+        {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     pub fn vocab_kanji_align_score(&mut self, kanji: &str, delta: f32) {
         if let Some(card) = self.vocabcards.iter_mut().find(|x| x.kanji == kanji) {
             card.update_score(delta);
@@ -195,8 +208,17 @@ impl Carddecks {
         file.read_to_string(&mut toml_string)?;
         let vocab_map: HashMap<String, Vocabcard> = toml::de::from_str(&toml_string)?;
         println!("{:?}", vocab_map);
-        let mut vocab_vec: Vec<Vocabcard> = vocab_map.values().cloned().collect();
-        self.vocabcards.append(&mut vocab_vec);
+        for card in vocab_map.values() {
+            if !self
+                .vocabcards
+                .iter()
+                .any(|existing_card| existing_card.kanji == card.kanji)
+            {
+                self.vocabcards.push(card.clone());
+            } else {
+                println!("Duplicate found for word: {}", card.kanji);
+            }
+        }
         Ok(())
     }
 }
